@@ -37,9 +37,16 @@ var dropZone = document.getElementById('drop_zone');
 dropZone.addEventListener('dragover', handleDragOver, false);
 dropZone.addEventListener('drop', handleFileSelect, false);
 
-var alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '.', '-', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+var Sigma = {
 
-var spaces = [' ', '\t', '\n', '\r'];
+    "alphabets": ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_', '.', '-'],
+
+    "numbers": ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+
+    "symbols": ['?', '!', '<', '>', '$', '#', '@', ':', ';', '\'', '+', '=', '~', '\\', '|', '&', '*', '%', '(', ')', '[', ']', '/', '^'],
+
+    "spaces": [' ', '\t', '\n', '\r']
+};
 
 var BibTex_Type = "";
 
@@ -52,8 +59,8 @@ var BibTex = {
             "author": "",
             "title": "",
             "booktitle": "",
-            "year": "",
-            "pages": ""
+            "pages": "",
+            "year": ""
         },
         "necessity": ["author", "title", "booktitle", "year"],
         "option": ["pages"]
@@ -66,8 +73,8 @@ var BibTex = {
             "journal": "",
             "volume": "",
             "number": "",
-            "year": "",
-            "pages": ""
+            "pages": "",
+            "year": ""
         },
         "necessity": ["author", "title", "journal", "volume", "number", "year"],
         "option": ["pages"]
@@ -81,7 +88,8 @@ var BibTex = {
             "isbn": "",
             "year": ""
         },
-        "necessity": ["author", "title", "publisher", "isbn", "year"]
+        "necessity": ["author", "title", "publisher", "isbn", "year"],
+        "option": []
     }
 };
 
@@ -164,6 +172,31 @@ function BibAnalysis(str) {
 
 }
 
+function isLegal(obj) {
+    for (val in obj.necessity) {
+        if(obj.tags[val] == "")
+            return false;
+    }
+    return true;
+}
+
+function printBibTags(obj) {
+    out += '<li>';
+    for(var val in obj) {
+        if(val == "pages"){
+            out += "Pages " + obj[val] + '. ';
+        }
+        else if(val == "title"){
+            out += '<I>' + obj[val] + '. ' + '</I>';
+        }
+        else if(obj[val] != ""){
+            out += obj[val] + '. ';
+        }
+        obj[val] = "";
+    }
+    out += '</li>';
+}
+
 //initial state
 function Bib_State_0(ch) {
     if (ch == '@')
@@ -174,7 +207,7 @@ function Bib_State_0(ch) {
 function Bib_State_1(ch) {
 
     //letters
-    if (contains(alphabet, ch)) {
+    if (contains(Sigma.alphabets, ch)) {
         lexeme = lexeme + ch;
     }
     //lexeme found in BibTex format: article book inproceedings.etc
@@ -199,8 +232,8 @@ function Bib_State_2(ch) {
         state = 3;  //to match tags
     }
     else if (ch == '}'){
-        if(stack.pop() == '{'){
-            out += "<br/>";
+        if(stack.pop() == '{' && isLegal(BibTex[BibTex_Type])){
+            printBibTags(BibTex[BibTex_Type].tags);
             state = 0;  //to initial
         }
         else{
@@ -209,13 +242,14 @@ function Bib_State_2(ch) {
     }
 }
 
+
 //match tags
 function Bib_State_3(ch) {
-    if (contains(alphabet, ch)) {
+    if (contains(Sigma.alphabets, ch)) {
         state = 4;
         lexeme = lexeme + ch;
     }
-    else if (contains(spaces, ch))
+    else if (contains(Sigma.spaces, ch))
         return;
     else
         state = 13; //error
@@ -232,7 +266,7 @@ function Bib_State_4(ch) {
         lexeme = "";
         state = 13; //error
     }
-    else if (contains(alphabet, ch)) {
+    else if (contains(Sigma.alphabets, ch)) {
         lexeme = lexeme + ch;
         return;
     }
@@ -247,7 +281,7 @@ function Bib_State_5(ch) {
         stack.push(ch);
         state = 7;  //tag={}
     }
-    else if (contains(spaces, ch))
+    else if (contains(Sigma.spaces, ch))
         return;
     else
         state = 13; //error
@@ -259,14 +293,12 @@ function Bib_State_6(ch) {
         state = 8;
         BibTex[BibTex_Type].tags[tag_name] += ch;
     }
-    else if (contains(alphabet, ch) || contains(spaces, ch)) {
+    else if (contains(Sigma.alphabets, ch) || contains(Sigma.spaces, ch) || contains(Sigma.numbers, ch) || contains(Sigma.symbols, ch)) {
         BibTex[BibTex_Type].tags[tag_name] += ch;
         return;
     }
     else if (ch == '\"') {
         if(stack.pop() == '\"'){
-            out += BibTex[BibTex_Type].tags[tag_name] + ", ";
-            BibTex[BibTex_Type].tags[tag_name] = "";
             state = 2;
         }
         else{
@@ -282,14 +314,12 @@ function Bib_State_7(ch) {
         state = 8;
         BibTex[BibTex_Type].tags[tag_name] += ch;
     }
-    else if (contains(alphabet, ch) || contains(spaces, ch)) {
+    else if (contains(Sigma.alphabets, ch) || contains(Sigma.spaces, ch) || contains(Sigma.numbers, ch) || contains(Sigma.symbols, ch)) {
         BibTex[BibTex_Type].tags[tag_name] += ch;
         return;
     }
     else if (ch == '}') {
         if(stack.pop() == '{'){
-            out += BibTex[BibTex_Type].tags[tag_name] + ", ";
-            BibTex[BibTex_Type].tags[tag_name] = "";
             state = 2;
         }
         else{
@@ -299,17 +329,13 @@ function Bib_State_7(ch) {
 }
 
 function Bib_State_8(ch) {
-    if (contains(spaces, ch))
+    if (contains(Sigma.spaces, ch))
         state = 9;
-    else if (contains(alphabet, ch))
+    else if (contains(Sigma.alphabets, ch))
         BibTex[BibTex_Type].tags[tag_name] += ch;
     else if (ch == '\"') {
         var outchar = stack.pop();
         if (outchar == '\"'){
-            if(BibTex[BibTex_Type].tags[tag_name] != undefined) {
-                out += BibTex[BibTex_Type].tags[tag_name] + ", ";
-                BibTex[BibTex_Type].tags[tag_name] = "";
-            }
             state = 2;
         }
         else {
@@ -320,10 +346,6 @@ function Bib_State_8(ch) {
     else if (ch == '}') {
         var outchar = stack.pop();
         if (outchar == '{'){
-            if(BibTex[BibTex_Type].tags[tag_name] != undefined) {
-                out += BibTex[BibTex_Type].tags[tag_name] + ", ";
-                BibTex[BibTex_Type].tags[tag_name] = "";
-            }
             state = 2;
         }
         else {
@@ -334,7 +356,7 @@ function Bib_State_8(ch) {
 }
 
 function Bib_State_9(ch) {
-    if (contains(spaces, ch))
+    if (contains(Sigma.spaces, ch))
         return;
     else if (ch == 'a')
         state = 10;
@@ -363,9 +385,9 @@ function Bib_State_11(ch) {
 }
 
 function Bib_State_12(ch) {
-    if (contains(spaces, ch))
+    if (contains(Sigma.spaces, ch))
         return;
-    else if (contains(alphabet, ch)) {
+    else if (contains(Sigma.alphabets, ch)) {
         BibTex[BibTex_Type].tags[tag_name] += ", " + ch;
         state = 8;
     }
@@ -377,5 +399,11 @@ function Bib_State_13(ch) {
         state = 1;
     else
         return;
+}
+
+function printJson(output, obj) {
+    for (var val in obj) {
+        output += obj[val] + ", ";
+    }
 }
 
