@@ -22,6 +22,10 @@ function handleFileSelect(evt) {
 
 }
 
+function clearAll(){
+    document.getElementById('list').innerHTML = '<ul>' + '</ul>';
+}
+
 var out = "";
 
 function handleDragOver(evt) {
@@ -178,7 +182,7 @@ function BibAnalysis(str) {
 //check if all the necessary tags are filled in
 function isLegal(obj) {
     for (val in obj.necessity) {
-        if(obj.tags[val] == "")
+        if(obj.tags[obj.necessity[val]] == "")
             return false;
     }
     return true;

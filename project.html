@@ -9,7 +9,7 @@
 	<title>BibAnalysis</title>
 
 	<!--主页样式文件-->
-	<link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
@@ -24,12 +24,16 @@
 	</header>
 
 	<div id="container">
-        <div id="btn_zone"><button>Clear</button></div>
+        <div id="btn_zone">
+                <button onclick="clearAll()">
+                    Clear
+                </button>
+        </div>
 		<div id="drop_zone">Drop files here</div>
 		<output id="list"></output>
 	</div>
 	<!--主函数文件-->
-	<script type="text/javascript" src="BibTex.js"></script>
+	<script type="text/javascript" src="js/BibTex.js"></script>
 	<footer>
 		<p>
 			Copyright &copy;Wang Silun
