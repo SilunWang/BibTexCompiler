@@ -37,6 +37,7 @@ var dropZone = document.getElementById('drop_zone');
 dropZone.addEventListener('dragover', handleDragOver, false);
 dropZone.addEventListener('drop', handleFileSelect, false);
 
+//charset
 var Sigma = {
 
     "alphabets": ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_', '.', '-'],
@@ -48,8 +49,10 @@ var Sigma = {
     "spaces": [' ', '\t', '\n', '\r']
 };
 
+//current BibTex type: article? book? inproceedings?
 var BibTex_Type = "";
 
+//the current tag's name: author? title? pages?
 var tag_name = "";
 
 var BibTex = {
@@ -100,11 +103,11 @@ var state = 0;
 //iter
 var i = 0;
 
-var stack = new Array();
+var stack = [];
 
 var lexeme = "";
 
-
+//if obj is in array a
 function contains(a, obj) {
 
     for (var i = 0; i < a.length; i++) {
@@ -116,7 +119,7 @@ function contains(a, obj) {
     return false;
 }
 
-
+//main function
 function BibAnalysis(str) {
 
     while (i < str.length) {
@@ -172,6 +175,7 @@ function BibAnalysis(str) {
 
 }
 
+//check if all the necessary tags are filled in
 function isLegal(obj) {
     for (val in obj.necessity) {
         if(obj.tags[val] == "")
@@ -180,6 +184,7 @@ function isLegal(obj) {
     return true;
 }
 
+//print all the filled tags in order
 function printBibTags(obj) {
     out += '<li>';
     for(var val in obj) {
@@ -255,6 +260,7 @@ function Bib_State_3(ch) {
         state = 13; //error
 }
 
+//wait for '='
 function Bib_State_4(ch) {
     lexeme = lexeme.toLowerCase();
     if (ch == '=' && (lexeme in BibTex[BibTex_Type].tags)) {
@@ -272,6 +278,7 @@ function Bib_State_4(ch) {
     }
 }
 
+//filter out spaces
 function Bib_State_5(ch) {
     if (ch == '\"') {
         stack.push(ch);
@@ -328,6 +335,7 @@ function Bib_State_7(ch) {
     }
 }
 
+//tagname = author
 function Bib_State_8(ch) {
     if (contains(Sigma.spaces, ch))
         state = 9;
@@ -355,6 +363,7 @@ function Bib_State_8(ch) {
     }
 }
 
+//math 'a'
 function Bib_State_9(ch) {
     if (contains(Sigma.spaces, ch))
         return;
@@ -366,6 +375,7 @@ function Bib_State_9(ch) {
     }
 }
 
+//match 'n'
 function Bib_State_10(ch) {
     if (ch == 'n')
         state = 11;
@@ -375,6 +385,7 @@ function Bib_State_10(ch) {
     }
 }
 
+//match 'd'
 function Bib_State_11(ch) {
     if (ch == 'd')
         state = 12;
@@ -384,6 +395,7 @@ function Bib_State_11(ch) {
     }
 }
 
+//find spaces
 function Bib_State_12(ch) {
     if (contains(Sigma.spaces, ch))
         return;
@@ -393,17 +405,12 @@ function Bib_State_12(ch) {
     }
 }
 
+//error state, wait for another @
 function Bib_State_13(ch) {
     stack.length = 0;
     if (ch == '@')
         state = 1;
     else
         return;
-}
-
-function printJson(output, obj) {
-    for (var val in obj) {
-        output += obj[val] + ", ";
-    }
 }
 
